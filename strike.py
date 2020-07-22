@@ -278,6 +278,7 @@ async def on_command_error(ctx, error):
 
 
 token = open("token.txt", 'r')
+token = token.read()
 token = token.strip()
-bot.run(token.read(), bot=True, reconnect=True)
+bot.run(token, bot=True, reconnect=True)
 
