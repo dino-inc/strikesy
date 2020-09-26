@@ -196,7 +196,26 @@ async def jail(ctx, member: discord.Member, duration: str, *, reason = ""):
     await ctx.send("this is being removed, as it was not posted in good faith")
     await strike(member, f"{member.name}(`{member.id}`) was jailed for {duration} by: {ctx.author.name}(`{ctx.author.id}`) because: {reason}")
 
-        
+@bot.command(name="unjail")
+@commands.has_role("Moderator")
+async def unjail(ctx, member: discord.Member, duration: str, *, reason = ""):
+    "Unjails no matter what."
+    if member.top_role >= ctx.author.top_role:
+        return
+    await unjail(member)
+    await ctx.send("Releasing the prisoner.")
+
+
+@bot.command(name="ban")
+@commands.has_role("Moderator")
+async def ban(ctx, member: discord.Member, duration: str, *, reason = ""):
+    "Bans no matter what."
+    if member.top_role >= ctx.author.top_role:
+        return
+    await permban(jail, "Tried not to get banned, ")
+    await ctx.send("Removing their privilege to life.")
+    
+
 @bot.command(name = "solitary")
 @commands.has_role("Moderator")
 async def solitary(ctx, member: discord.Member, duration: str, *, reason = ""):
