@@ -225,7 +225,7 @@ async def pardon(ctx, member: discord.Member):
 
 @bot.command(name="murder", aliases=["ban"])
 @commands.has_role("Moderator")
-async def murder(ctx, member: discord.Member):
+async def murder(ctx, member: discord.Member, reason="unspecified reasons"):
     "Bans no matter what, say `yes` to confirm the ban."
     
     def verify_user(message):
@@ -237,18 +237,18 @@ async def murder(ctx, member: discord.Member):
     if member.top_role >= ctx.author.top_role:
         return
     try:
-        await ctx.send(f"You are about to ban {member.name}(`{member.id}`, are you sure? Say `yes` to confirm.")
-        choice = await self.bot.wait_for('message', check=verify_user, timeout=30)
+        await ctx.send(f"You are about to ban {member.name}(`{member.id}`) for {reason}, are you sure? Say `yes` to confirm.")
+        choice = await bot.wait_for('message', check=verify_user, timeout=30)
     
     except asyncio.TimeoutError:
         await ctx.send(f"No input found, not banning.")
         return
-    if choice == "yes":
+    if choice.content == "yes":
         await ctx.send("Removing their privilege to life.")
-        await reports.send(f"{member.name}(`{member.id}`) did an oopsie woopsie and has been banned. Forever.")
+        await reports.send(f"{member.name}(`{member.id}`) did an oopsie woopsie and has been banned for {reason}. Forever.")
         await server.ban(member)
     else:
-        await ctx.send("You did not say 'yes', they live to see another day."
+        await ctx.send(f"You did not say 'yes', you said '{choice.content}' - they live to see another day.")
 
 
 
