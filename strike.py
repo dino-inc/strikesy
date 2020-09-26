@@ -93,6 +93,7 @@ async def permjail(person, mesg):
     await person.remove_roles(memer)
     await punishments.zrem("unjail", person.id)
 
+
 async def unjail(person):
     await reports.send(f"{person.name}(`{person.id}`) is unjailed!")
     await person.remove_roles(jail)
@@ -195,9 +196,26 @@ async def jail(ctx, member: discord.Member, duration: str, *, reason = ""):
     await ctx.send("this is being removed, as it was not posted in good faith")
     await strike(member, f"{member.name}(`{member.id}`) was jailed for {duration} by: {ctx.author.name}(`{ctx.author.id}`) because: {reason}")
 
-@bot.command(name="unjail")
+
+@bot.command(name = "jale", aliases = ["softjail", "jaiI"])
 @commands.has_role("Moderator")
-async def unjail(ctx, member: discord.Member):
+async def jale(ctx, member: discord.Member, duration: str, *, reason = ""):
+    """Jails the member given for the duration given without a strike. Optionally, add a reason which goes in #police_reports.
+    One interesting thing is that consecutive jails override each other, allowing you to extend sentences."""
+    if member.top_role >= ctx.author.top_role:
+        return
+    await member.add_roles(jail)
+    await member.remove_roles(memer)
+    durat = parse_duration(duration)
+    if durat != None:
+        add_punishment("unjail", member, parse_duration(duration))
+    await ctx.send("this is being removed, as it was not posted in good faith")
+    await reports.send(f"{member.name}(`{member.id}`) was jailed for {duration} by: {ctx.author.name}(`{ctx.author.id}`) because: {reason}")
+
+
+@bot.command(name="pardon", aliases=["unjail"])
+@commands.has_role("Moderator")
+async def pardon(ctx, member: discord.Member):
     "Unjails no matter what."
     if member.top_role >= ctx.author.top_role:
         return
@@ -205,15 +223,18 @@ async def unjail(ctx, member: discord.Member):
     await ctx.send("Releasing the prisoner.")
 
 
-@bot.command(name="ban")
+@bot.command(name="murder", aliases=["ban"])
 @commands.has_role("Moderator")
-async def ban(ctx, member: discord.Member):
+async def murder(ctx, member: discord.Member):
     "Bans no matter what."
     if member.top_role >= ctx.author.top_role:
         return
-    await permban(jail, "Tried not to get banned, ")
     await ctx.send("Removing their privilege to life.")
-    
+    await reports.send(f"{member.name}(`{member.id}`) did an oopsie woopsie and has been banned. Forever.")
+    await server.ban(member)
+
+
+
 @bot.command(name = "solitary")
 @commands.has_role("Moderator")
 async def solitary(ctx, member: discord.Member, duration: str, *, reason = ""):
