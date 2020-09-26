@@ -52,31 +52,30 @@ def parse_duration(raw, source=None, negative=False):
 # NO LONGER STOLEN FROM ROWBOAT. THANKS #
 #########################################
 
-async def check_punishments(person_id, mesg = ""):
-    person = await get_member(person_id)
-    if   strikesdb.get(person_id) == b'3':
-        await dayjail(person, 1, mesg)
-    elif strikesdb.get(person_id) == b'4':
-        await dayjail(person, 2, mesg)
-    elif strikesdb.get(person_id) == b'5':
-        await permjail(person, mesg)
-    elif strikesdb.get(person_id) == b'6':
-        await weekban(person, mesg)
-    elif strikesdb.get(person_id) == b'7':
-        await permban(person, mesg)
+async def check_punishments(member, mesg = ""):
+    if   strikesdb.get(member.id) == b'3':
+        await dayjail(member, 1, mesg)
+    elif strikesdb.get(member.id) == b'4':
+        await dayjail(member, 2, mesg)
+    elif strikesdb.get(member.id) == b'5':
+        await permjail(member, mesg)
+    elif strikesdb.get(member.id) == b'6':
+        await weekban(member, mesg)
+    elif strikesdb.get(member.id) == b'7':
+        await permban(member, mesg)
     else:
         await reports.send(mesg + ".")
 
 def add_punishment(ptype, person, timedelta):
-    punishments.zadd(ptype, floor((datetime.datetime.utcnow() + 
+    punishments.zadd(ptype, floor((datetime.datetime.utcnow() +
 timedelta).timestamp()), person.id)
-    
+
 
 async def get_member(person):
     try:
         return server.get_member(person)
     except:
-        return discord.utils.get([i.user for i in server.bans()], id = person) 
+        return discord.utils.get([i.user for i in server.bans()], id = person)
 
 async def dayjail(person, days, mesg):
     await reports.send(mesg + " but gained too many strikes and is jailed for " + str(days) + " days.")
@@ -93,7 +92,7 @@ async def permjail(person, mesg):
     await person.add_roles(jail)
     await person.remove_roles(memer)
     await punishments.zrem("unjail", person.id)
-    
+
 async def unjail(person):
     await reports.send(f"{person.name}(`{person.id}`) is unjailed!")
     await person.remove_roles(jail)
@@ -103,7 +102,7 @@ async def unsolitary(person):
     await reports.send(f"{person.name}(`{person.id}`) is released from solitary confinement!")
     await person.remove_roles(solitary)
     await person.add_roles(memer)
-    
+
 async def unban(person):
     await reports.send(f"{person.name}(`{person.id}`) is unbanned!")
     await server.unban(person)
@@ -122,7 +121,7 @@ async def strike_decay(person):
     if strikesdb.get(person.id) != b'0':
         strikesdb.decr(person.id)
         add_punishment("strike_decay", person, datetime.timedelta(weeks = 1))
-    
+
 
 
 def check_action(actionbytes):
@@ -153,8 +152,8 @@ async def strike(member, mesg = None):
         mesg = person.name + " did some bad thing and got striked"
     strikesdb.incr(member.id)
     add_punishment("strike_decay", member, datetime.timedelta(weeks = 1))
-    await check_punishments(member.id, mesg)
-    
+    await check_punishments(member, mesg)
+
 @bot.command(name = "unstrike")
 @commands.has_role("Moderator")
 async def command_unstrike(ctx, member: discord.Member, *, reason = ""):
@@ -180,7 +179,7 @@ async def strikes(ctx, member: discord.Member=None):
         await ctx.send("0")
     else:
         await ctx.send(a.decode("utf-8"))
-        
+
 @bot.command(name = "jail")
 @commands.has_role("Moderator")
 async def jail(ctx, member: discord.Member, duration: str, *, reason = ""):
@@ -215,7 +214,6 @@ async def ban(ctx, member: discord.Member):
     await permban(jail, "Tried not to get banned, ")
     await ctx.send("Removing their privilege to life.")
     
-
 @bot.command(name = "solitary")
 @commands.has_role("Moderator")
 async def solitary(ctx, member: discord.Member, duration: str, *, reason = ""):
@@ -300,4 +298,3 @@ token = open("token.txt", 'r')
 token = token.read()
 token = token.strip()
 bot.run(token, bot=True, reconnect=True)
-
