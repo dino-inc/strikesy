@@ -198,7 +198,7 @@ async def jail(ctx, member: discord.Member, duration: str, *, reason = ""):
 
 @bot.command(name="unjail")
 @commands.has_role("Moderator")
-async def unjail(ctx, member: discord.Member, duration: str, *, reason = ""):
+async def unjail(ctx, member: discord.Member):
     "Unjails no matter what."
     if member.top_role >= ctx.author.top_role:
         return
@@ -208,7 +208,7 @@ async def unjail(ctx, member: discord.Member, duration: str, *, reason = ""):
 
 @bot.command(name="ban")
 @commands.has_role("Moderator")
-async def ban(ctx, member: discord.Member, duration: str, *, reason = ""):
+async def ban(ctx, member: discord.Member):
     "Bans no matter what."
     if member.top_role >= ctx.author.top_role:
         return
