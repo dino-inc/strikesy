@@ -225,7 +225,7 @@ async def pardon(ctx, member: discord.Member):
 
 @bot.command(name="murder", aliases=["ban"])
 @commands.has_role("Moderator")
-async def murder(ctx, member: discord.Member, reason="unspecified reasons"):
+async def murder(ctx, member: discord.Member, *, reason="unspecified reasons"):
     "Bans no matter what, say `yes` to confirm the ban."
     
     def verify_user(message):
@@ -246,7 +246,7 @@ async def murder(ctx, member: discord.Member, reason="unspecified reasons"):
     if choice.content == "yes":
         await ctx.send("Removing their privilege to life.")
         await reports.send(f"{member.name}(`{member.id}`) did an oopsie woopsie and has been banned for {reason}. Forever.")
-        await server.ban(member)
+        await server.ban(member,reason=reason,delete_message_days=0)
     else:
         await ctx.send(f"You did not say 'yes', you said '{choice.content}' - they live to see another day.")
 
