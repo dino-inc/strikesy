@@ -110,12 +110,12 @@ async def unban(person):
 
 async def weekban(person, mesg):
     await reports.send(mesg + " but gained too many strikes and is banned for a week.")
-    await server.ban(person)
+    await server.ban(person,delete_message_days=0)
     add_punishment("unban", person, datetime.timedelta(weeks = 1))
 
 async def permban(person, mesg):
     await reports.send(mesg + " but gained too many strikes and is permanently banned.")
-    await server.ban(person)
+    await server.ban(person,delete_message_days=0)
 
 async def strike_decay(person):
     await reports.send(f"{person.name}(`{person.id}`) has lost a strike due to strike decay!")
