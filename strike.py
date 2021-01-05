@@ -23,8 +23,8 @@ UNITS = {
 }
 
 
-def parse_duration(raw, source=None, negative=False):
-    if raw == '-':
+def parse_duration(timespec, source=None, negative=False):
+    if timespec == '-':
         # It looks like "None" time is handled by strikesy as an
         # indefinite period.
         return None
@@ -35,13 +35,13 @@ def parse_duration(raw, source=None, negative=False):
     # duration, but it *do* be sounding neat.
     value = 0
     digits = ''
-    for char in raw:
+    for char in timespec:
         if char.isdigit():
             digits += char
             continue
 
         if char not in UNITS or not digits:
-            raise ValueError(f"Invalid time specifier: '{raw}'")
+            raise ValueError(f"Invalid time specifier: '{timespec}'")
 
         value += int(digits) * UNITS[char]
         digits = ''
@@ -81,15 +81,15 @@ def add_punishment(ptype, person, timedelta):
 async def get_member(person):
     try:
         return server.get_member(person)
-    except:
+    except Exception:
         return discord.utils.get([i.user for i in server.bans()], id=person)
 
 
 async def dayjail(person, days, mesg):
-    await reports.send(mesg + " but gained too many strikes and is jailed for "+str(days)+" days.")
+    await reports.send(f"{mesg} but gained too many strikes and is jailed for {days} days.")
     try:
         await person.remove_roles(jail)
-    except:
+    finally:
         pass
     await person.add_roles(jail)
     await person.remove_roles(memer)
@@ -97,7 +97,7 @@ async def dayjail(person, days, mesg):
 
 
 async def permjail(person, mesg):
-    await reports.send(mesg + " but gained too many strikes and is jailed until they write an essay to get out.")
+    await reports.send(f"{mesg} but gained too many strikes and is jailed until they write an essay to get out.")
     await person.add_roles(jail)
     await person.remove_roles(memer)
     await punishments.zrem("unjail", person.id)
@@ -121,14 +121,14 @@ async def unban(person):
 
 
 async def weekban(person, mesg):
-    await reports.send(mesg + " but gained too many strikes and is banned for a week.")
-    await server.ban(person,delete_message_days=0)
+    await reports.send(f"{mesg} but gained too many strikes and is banned for a week.")
+    await server.ban(person, delete_message_days=0)
     add_punishment("unban", person, datetime.timedelta(weeks=1))
 
 
 async def permban(person, mesg):
-    await reports.send(mesg + " but gained too many strikes and is permanently banned.")
-    await server.ban(person,delete_message_days=0)
+    await reports.send(f"{mesg} but gained too many strikes and is permanently banned.")
+    await server.ban(person, delete_message_days=0)
 
 
 async def strike_decay(person):
@@ -139,9 +139,7 @@ async def strike_decay(person):
 
 
 def check_action(actionbytes):
-    if actionbytes == b'unpunish':
-        return unpunish
-    elif actionbytes == b'unjail':
+    if actionbytes == b'unjail':
         return unjail
     elif actionbytes == b'unsolitary':
         return unsolitary
@@ -149,6 +147,8 @@ def check_action(actionbytes):
         return strike_decay
     elif actionbytes == b'unban':
         return unban
+    else:
+        raise ValueError(f"Unknown action '{actionbytes}'")
 
 
 @bot.command(name="strike")
@@ -161,11 +161,9 @@ async def command_strike(ctx, member: discord.Member, *, reason=""):
     await strike(member, f"{member.name}(`{member.id}`) was striked by {ctx.author.name}(`{ctx.author.id}`) for: {reason}")
 
 
-async def strike(member, mesg=None):
+async def strike(member, mesg):
     if member.id == bot.user.id:
         return
-    if mesg is None:
-        mesg = person.name + " did some bad thing and got striked"
     strikesdb.incr(member.id)
     add_punishment("strike_decay", member, datetime.timedelta(weeks=1))
     await check_punishments(member, mesg)
@@ -184,12 +182,12 @@ async def command_unstrike(ctx, member: discord.Member, *, reason=""):
 
 async def unstrike(member):
     current_strikes = strikesdb.get(member.id)
-    if current_strikes != b'0' and current_strikes != None:
+    if current_strikes != b'0' and current_strikes is not None:
         strikesdb.decr(member.id)
 
 
 @bot.command(name="strikes")
-async def strikes(ctx, member: discord.Member=None):
+async def strikes(ctx, member: discord.Member = None):
     """Tells you the strikes of a member, or of yourself if no member is supplied."""
     if member is None:
         member = ctx.author
@@ -202,7 +200,7 @@ async def strikes(ctx, member: discord.Member=None):
 
 @bot.command(name="jail")
 @commands.has_role("Moderator")
-async def jail(ctx, member: discord.Member, duration: str, *, reason = ""):
+async def jail(ctx, member: discord.Member, duration: str, *, reason=""):
     """Jails the member given for the duration given (in the familiar M0DBOT format). Optionally, add a reason which goes in #police_reports.
     One interesting thing is that consecutive jails override each other, allowing you to extend sentences."""
     if member.top_role >= ctx.author.top_role:
@@ -260,7 +258,7 @@ async def murder(ctx, member: discord.Member, *, reason="unspecified reasons"):
         choice = await bot.wait_for('message', check=verify_user, timeout=30)
 
     except asyncio.TimeoutError:
-        await ctx.send(f"No input found, not banning.")
+        await ctx.send("No input found, not banning.")
         return
     if choice.content == "yes":
         await ctx.send("Removing their privilege to life.")
@@ -279,7 +277,7 @@ async def solitary(ctx, member: discord.Member, duration: str, *, reason=""):
         return
     try:
         await member.remove_roles(jail)
-    except:
+    finally:
         pass
     await member.add_roles(solitary)
     await member.remove_roles(memer)
@@ -304,8 +302,7 @@ async def unpunish_loop():
             jail = discord.utils.get(server.roles, id=285615006442192896)
             # jail = discord.utils.get(server.roles, id =450377477949227018)
             solitary = discord.utils.get(server.roles, id=394608676276535296)
-            authorised = discord.utils.get(server.roles, id=431368741197053953)
-            # authorised = discord.utils.get(server.roles, id = 450384394667163650)
+            # authorised = discord.utils.get(server.roles, id=431368741197053953)
         for i in punishments.keys():
             action = check_action(i)
             timey = floor(datetime.datetime.utcnow().timestamp())
