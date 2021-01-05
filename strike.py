@@ -11,42 +11,47 @@ punishments = redis.StrictRedis(host='localhost', port=6379, db=1)
 bot = commands.Bot(command_prefix='?', description="""Every time someone is jailed using strikesy, they gain a strike. At certain numbers of strikes, punishments automatically occur.
 PLEASE send ALL complaints and suggestions to me, through DM.""")
 
-####################################################
-# #THIS CODE IS WHOLLY STOLEN FROM ROWBOAT. THANKS #
-####################################################
+##############################################################
+# #THIS CODE IS LESS THAN WHOLLY STOLEN FROM ROWBOAT. THANKS #
+##############################################################
 UNITS = {
-    's': lambda v: v,
-    'm': lambda v: v * 60,
-    'h': lambda v: v * 60 * 60,
-    'd': lambda v: v * 60 * 60 * 24,
-    'w': lambda v: v * 60 * 60 * 24 * 7,
+    's': 1,
+    'm': 60,
+    'h': 60 * 60,
+    'd': 60 * 60 * 24,
+    'w': 60 * 60 * 24 * 7,
 }
 
 
 def parse_duration(raw, source=None, negative=False):
     if raw == '-':
+        # It looks like "None" time is handled by strikesy as an
+        # indefinite period.
         return None
 
+    # Parse sequences of digits followed by a unit specifier, so you
+    # could compound them like "5d10m15s" for 5 days, 10 minutes, and
+    # 15 seconds. I don't know specifically how it's useful for a jail
+    # duration, but it *do* be sounding neat.
     value = 0
     digits = ''
-
     for char in raw:
         if char.isdigit():
             digits += char
             continue
 
         if char not in UNITS or not digits:
-            if safe:
-                return None
-            raise CommandError('Invalid duration')
+            raise ValueError(f"Invalid time specifier: '{raw}'")
 
-        value += UNITS[char](int(digits))
+        value += int(digits) * UNITS[char]
         digits = ''
 
+    # NOTE Why would the value be negative?
     if negative:
         value = value * -1
 
-    return datetime.timedelta(seconds=value + 1)
+    # NOTE what's the +1 for?
+    return datetime.timedelta(seconds=value+1)
 
 #########################################
 # NO LONGER STOLEN FROM ROWBOAT. THANKS #
