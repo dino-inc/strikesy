@@ -11,6 +11,9 @@ punishments = redis.StrictRedis(host='localhost', port=6379, db=1)
 bot = commands.Bot(command_prefix='?', description="""Every time someone is jailed using strikesy, they gain a strike. At certain numbers of strikes, punishments automatically occur.
 PLEASE send ALL complaints and suggestions to me, through DM.""")
 
+# Message sent whenever 
+jail_response = "To be clear, we did not jail this user due to financial fraud related to GameStop or other stocks."
+
 ##############################################################
 # #THIS CODE IS LESS THAN WHOLLY STOLEN FROM ROWBOAT. THANKS #
 ##############################################################
@@ -197,7 +200,6 @@ async def strikes(ctx, member: discord.Member = None):
     else:
         await ctx.send(a.decode("utf-8"))
 
-
 @bot.command(name="jail")
 @commands.has_role("Moderator")
 async def jail(ctx, member: discord.Member, duration: str, *, reason=""):
@@ -210,7 +212,7 @@ async def jail(ctx, member: discord.Member, duration: str, *, reason=""):
     durat = parse_duration(duration)
     if durat is not None:
         add_punishment("unjail", member, parse_duration(duration))
-    await ctx.send("this is being removed, as it was not posted in good faith")
+    await ctx.send(jail_resposne)
     await strike(member, f"{member.name}(`{member.id}`) was jailed for {duration} by: {ctx.author.name}(`{ctx.author.id}`) because: {reason}")
 
 
@@ -226,7 +228,7 @@ async def jale(ctx, member: discord.Member, duration: str, *, reason=""):
     durat = parse_duration(duration)
     if durat is not None:
         add_punishment("unjail", member, parse_duration(duration))
-    await ctx.send("this is being removed, as it was not posted in good faith")
+    await ctx.send(jail_response)
     await reports.send(f"{member.name}(`{member.id}`) was jailed for {duration} by: {ctx.author.name}(`{ctx.author.id}`) because: {reason}")
 
 
