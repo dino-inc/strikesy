@@ -212,7 +212,7 @@ async def jail(ctx, member: discord.Member, duration: str, *, reason=""):
     durat = parse_duration(duration)
     if durat is not None:
         add_punishment("unjail", member, parse_duration(duration))
-    await ctx.send(jail_resposne)
+    await ctx.send(jail_response)
     await strike(member, f"{member.name}(`{member.id}`) was jailed for {duration} by: {ctx.author.name}(`{ctx.author.id}`) because: {reason}")
 
 
